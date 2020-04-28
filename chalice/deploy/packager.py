@@ -108,6 +108,21 @@ class LambdaDeploymentPackager(object):
                 self._add_app_files(z, project_dir)
                 self._add_vendor_files(z, self._osutils.joinpath(
                     project_dir, self._VENDOR_DIR))
+
+            # HACK: Clone archive to ensure its has correct permissions
+            with self._osutils.tempdir() as clone_dir:
+                self._osutils.extract_zipfile(package_filename, clone_dir)
+                self._osutils.remove_file(package_filename)
+
+                os.system('chmod -R 777 {}'.format(clone_dir))
+
+                with self._osutils.open_zip(package_filename, 'w', self._osutils.ZIP_DEFLATED) as z:
+                    for dirname, subdirs, files in self._osutils.walk(clone_dir):
+                      z.write(dirname)
+
+                      for filename in files:
+                          z.write(os.path.join(dirname, filename))
+
         return package_filename
 
     def _add_vendor_files(self, zipped, dirname):
