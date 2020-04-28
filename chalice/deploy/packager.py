@@ -117,11 +117,13 @@ class LambdaDeploymentPackager(object):
 
                 os.system('chmod -R 777 {}'.format(clone_dir))
 
-                with self._osutils.open_zip(package_filename, 'w', self._osutils.ZIP_DEFLATED) as z:
+                with self._osutils.open_zip(package_filename, 'w', self._osutils.ZIP_DEFLATED) as zf:
+                    prefix_len = len(clone_dir) + 1
                     for root, _, files in self._osutils.walk(clone_dir):
                         for filename in files:
                             full_path = self._osutils.joinpath(root, filename)
-                            z.write(full_path)
+                            zip_path = full_path[prefix_len:]
+                            zf.write(full_path, zip_path)
 
         return package_filename
 
