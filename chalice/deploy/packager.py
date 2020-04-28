@@ -4,6 +4,7 @@ import inspect
 import re
 import subprocess
 import logging
+import os
 from email.parser import FeedParser
 from email.message import Message  # noqa
 from zipfile import ZipFile  # noqa
