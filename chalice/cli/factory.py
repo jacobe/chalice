@@ -165,6 +165,15 @@ class CLIFactory(object):
             user_provided_params['profile'] = self.profile
         if api_gateway_stage is not None:
             user_provided_params['api_gateway_stage'] = api_gateway_stage
+
+        try:
+            env_vars_from_disk = self.load_dotenv_variables()
+            if env_vars_from_disk is not None:
+                user_provided_params['environment_variables'] = env_vars_from_disk
+        except (OSError, IOError):
+            raise RuntimeError("Unable to load environment variables from "
+                               "the .env file.")
+
         config = Config(chalice_stage=chalice_stage_name,
                         user_provided_params=user_provided_params,
                         config_from_disk=config_from_disk,
@@ -283,6 +292,33 @@ class CLIFactory(object):
         config_file = os.path.join(self.project_dir, '.chalice', 'config.json')
         with open(config_file) as f:
             return json.loads(f.read())
+
+    def load_dotenv_variables(self):
+        # type: () -> Dict[str, Any]
+        """Load environment variables from a .env file in the project directory,
+        if present.
+
+        :raise: OSError/IOError if unable to load the config file.
+
+        """
+        env_file = os.path.join(self.project_dir, '.chalice', '.env')
+        if not os.path.exists(env_file):
+            return None
+
+        env_vars = []
+        with open(env_file) as f:
+            for line in f:
+                if line.startswith('#') or not line.strip():
+                    continue
+
+                if line.startswith('export'):
+                    key, value = line.replace('export ', '', 1).strip().split('=', 1)
+                else:
+                    key, value = line.strip().split('=', 1)
+
+                env_vars.append({key: value})
+        return env_vars
+
 
     def create_local_server(self, app_obj, config, host, port):
         # type: (Chalice, Config, str, int) -> local.LocalDevServer
