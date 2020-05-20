@@ -304,19 +304,16 @@ class CLIFactory(object):
         env_file = os.path.join(self.project_dir, '.chalice', '.env')
         if not os.path.exists(env_file):
             return None
-
-        env_vars = []
+        env_vars = {}
         with open(env_file) as f:
             for line in f:
                 if line.startswith('#') or not line.strip():
                     continue
-
-                if line.startswith('export'):
+                if line.startswith('export '):
                     key, value = line.replace('export ', '', 1).strip().split('=', 1)
                 else:
                     key, value = line.strip().split('=', 1)
-
-                env_vars.append({key: value})
+                env_vars[key] = value
         return env_vars
 
 
